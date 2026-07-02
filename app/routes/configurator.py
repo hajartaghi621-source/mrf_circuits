@@ -18,6 +18,14 @@ async def configurator(request: Request):
         "active_page": "configurator",
     })
 
+def parse_float(value):
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
 
 @router.post("/quote", response_class=JSONResponse)
 async def submit_quote(request: Request):
@@ -29,13 +37,13 @@ async def submit_quote(request: Request):
             user_id=user["id"] if user else None,
             product_type=data.get("product_type", ""),
             technology=data.get("technology", ""),
-            frequency_min=data.get("frequency_min"),
-            frequency_max=data.get("frequency_max"),
+            frequency_min=parse_float(data.get("frequency_min")),
+            frequency_max=parse_float(data.get("frequency_max")),
             parameters=data.get("parameters", {}),
             substrate=data.get("substrate", ""),
-            estimated_cost=data.get("estimated_cost"),
-            quantity=data.get("quantity", 1),
-            contact_email=data.get("contact_email", user["email"] if user else ""),
+            estimated_cost=parse_float(data.get("estimated_cost")),
+            quantity=int(data.get("quantity") or 1),
+            contact_email=data.get("contact_email") or (user["email"] if user else ""),
             notes=data.get("notes", ""),
             status="pending",
         )
@@ -43,5 +51,8 @@ async def submit_quote(request: Request):
         db.commit()
         db.refresh(quote)
         return JSONResponse({"success": True, "quote_id": quote.id})
+    except Exception as e:
+        db.rollback()
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
     finally:
         db.close()
