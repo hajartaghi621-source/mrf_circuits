@@ -1,0 +1,101 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}DASHBOARD OVERVIEW{% endblock %}
+{% block admin_content %}
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+  <div class="stat-card">
+    <p class="stat-label">Total Products</p>
+    <p class="stat-value">{{ total_products }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Total Orders</p>
+    <p class="stat-value">{{ total_orders }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Total Users</p>
+    <p class="stat-value">{{ total_users }}</p>
+  </div>
+  <div class="stat-card">
+    <p class="stat-label">Total Revenue</p>
+    <p class="stat-value">${{ "%.0f"|format(total_revenue) }}</p>
+  </div>
+</div>
+<!-- Alerts -->
+{% if pending_quotes > 0 %}
+<div class="mb-6 p-4 border border-yellow-700 bg-yellow-900/20 text-yellow-300 text-sm">
+  ⚠ {{ pending_quotes }} pending configurator quote(s) awaiting review. <a href="/admin/quotes" class="underline">View quotes →</a>
+</div>
+{% endif %}
+{% if low_stock %}
+<div class="mb-6 p-4 border border-red-700 bg-red-900/20 text-red-300 text-sm">
+  ⚠ {{ low_stock|length }} product(s) with low stock (≤5 units). <a href="/admin/products" class="underline">Manage →</a>
+</div>
+{% endif %}
+<!-- Recent Orders -->
+<div class="mb-10">
+  <h3 class="font-tech text-lg font-bold text-white mb-4">RECENT ORDERS</h3>
+  <div class="border border-slate-800 overflow-hidden">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ORDER ID</th>
+          <th>USER</th>
+          <th>AMOUNT</th>
+          <th>STATUS</th>
+          <th>DATE</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in recent_orders %}
+        <tr>
+          <td class="font-mono text-cyan-400">#{{ order.id }}</td>
+          <td class="text-slate-300">{{ order.user_email }}</td>
+          <td class="text-white font-bold">${{ "%.2f"|format(order.total_amount) }}</td>
+          <td><span class="badge-{% if order.status == 'paid' %}stock{% elif order.status == 'shipped' %}transit{% else %}archived{% endif %}">{{ order.status | upper }}</span></td>
+          <td class="text-slate-400 font-mono text-xs">{{ order.order_date.strftime('%Y-%m-%d') if order.order_date else '' }}</td>
+          <td>
+            <select onchange="updateOrderStatus({{ order.id }}, this.value)" class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-2 py-1">
+              {% for s in ['placed', 'paid', 'packed', 'shipped', 'delivered', 'cancelled'] %}
+              <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s | upper }}</option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<!-- Low Stock -->
+{% if low_stock %}
+<div>
+  <h3 class="font-tech text-lg font-bold text-white mb-4">LOW STOCK ALERT</h3>
+  <div class="border border-slate-800">
+    <table class="data-table">
+      <thead><tr><th>PRODUCT</th><th>SKU</th><th>STOCK</th><th>ACTION</th></tr></thead>
+      <tbody>
+        {% for p in low_stock %}
+        <tr>
+          <td class="text-white">{{ p.name }}</td>
+          <td class="font-mono text-slate-400">{{ p.sku }}</td>
+          <td class="text-red-400 font-bold">{{ p.stock_quantity }}</td>
+          <td><a href="/admin/products/{{ p.id }}/edit" class="text-cyan-400 hover:text-white text-xs font-mono">RESTOCK →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+async function updateOrderStatus(orderId, status) {
+  const fd = new FormData();
+  fd.append('status', status);
+  await fetch(`/admin/orders/${orderId}/status`, {method: 'POST', body: fd});
+}
+</script>
+{% endblock %}

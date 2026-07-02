@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}RF Configurator{% endblock %}
+{% block content %}
+<div class="py-16 container mx-auto px-6 max-w-4xl">
+  <div class="text-center mb-12">
+    <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-4">// Design Tool</p>
+    <h2 class="font-tech text-4xl font-bold text-white">RF PRODUCT CONFIGURATOR</h2>
+    <p class="text-slate-400 text-sm mt-3">Configure your custom RF component in 7 steps</p>
+  </div>
+  <!-- Step Indicator -->
+  <div class="flex items-center justify-between mb-12 relative" id="step-indicator">
+    <div class="absolute top-5 left-0 right-0 h-0.5 bg-slate-800 z-0"></div>
+    {% for i in range(1, 8) %}
+    <div class="step-node flex flex-col items-center z-10" data-step="{{ i }}">
+      <div class="step-circle" id="step-circle-{{ i }}">{{ i }}</div>
+      <p class="text-xs font-mono text-slate-500 mt-2 text-center hidden md:block" id="step-label-{{ i }}">
+        {% if i == 1 %}TYPE{% elif i == 2 %}TECH{% elif i == 3 %}FREQ{% elif i == 4 %}PARAMS{% elif i == 5 %}SUBSTRATE{% elif i == 6 %}COST{% else %}FINALIZE{% endif %}
+      </p>
+    </div>
+    {% endfor %}
+  </div>
+  <!-- Step Panels -->
+  <div id="configurator-form" class="bg-slate-900/60 border border-slate-800 p-8">
+    <!-- Step 1: Product Type -->
+    <div class="step-panel" id="panel-1">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">SELECT PRODUCT TYPE</h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {% for ptype in ['Low Noise Amplifier (LNA)', 'Band Pass Filter (BPF)', 'Voltage Controlled Oscillator (VCO)', 'Power Divider / Splitter', 'Directional Coupler', 'Power Amplifier (PA)'] %}
+        <label class="cursor-pointer">
+          <input type="radio" name="product_type" value="{{ ptype }}" class="hidden peer"/>
+          <div class="p-4 border border-slate-700 peer-checked:border-cyan-400 peer-checked:bg-cyan-400/10 hover:border-slate-500 transition-all text-center">
+            <p class="font-tech text-xs font-bold text-white">{{ ptype }}</p>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Step 2: Technology -->
+    <div class="step-panel hidden" id="panel-2">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">SELECT TECHNOLOGY</h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {% for tech in ['Microstrip', 'Stripline', 'Coplanar Waveguide (CPW)', 'SIW', 'MMIC (GaAs)', 'MMIC (GaN)'] %}
+        <label class="cursor-pointer">
+          <input type="radio" name="technology" value="{{ tech }}" class="hidden peer"/>
+          <div class="p-4 border border-slate-700 peer-checked:border-cyan-400 peer-checked:bg-cyan-400/10 hover:border-slate-500 transition-all text-center">
+            <p class="font-tech text-xs font-bold text-white">{{ tech }}</p>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Step 3: Frequency -->
+    <div class="step-panel hidden" id="panel-3">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">FREQUENCY RANGE (GHz)</h3>
+      <div class="grid grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Min Frequency (GHz)</label>
+          <input id="freq-min" name="frequency_min" type="number" min="0.1" max="300" step="0.1" placeholder="e.g. 1.0" class="form-input-dark"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Max Frequency (GHz)</label>
+          <input id="freq-max" name="frequency_max" type="number" min="0.1" max="300" step="0.1" placeholder="e.g. 10.0" class="form-input-dark"/>
+        </div>
+      </div>
+    </div>
+    <!-- Step 4: Parameters -->
+    <div class="step-panel hidden" id="panel-4">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">ELECTRICAL PARAMETERS</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Gain (dB)</label>
+          <input id="param-gain" type="number" step="0.1" placeholder="e.g. 20" class="form-input-dark"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Noise Figure (dB)</label>
+          <input id="param-nf" type="number" step="0.1" placeholder="e.g. 1.5" class="form-input-dark"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Output Power (dBm)</label>
+          <input id="param-power" type="number" step="0.5" placeholder="e.g. 30" class="form-input-dark"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Return Loss (dB)</label>
+          <input id="param-rl" type="number" step="0.5" placeholder="e.g. 20" class="form-input-dark"/>
+        </div>
+      </div>
+    </div>
+    <!-- Step 5: Substrate -->
+    <div class="step-panel hidden" id="panel-5">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">SUBSTRATE SELECTION</h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        {% for sub in ['Rogers RO4003C', 'Rogers RO4350B', 'Taconic TLY-5', 'FR4 (PCB-grade)', 'Alumina (Al₂O₃)', 'PTFE/Glass'] %}
+        <label class="cursor-pointer">
+          <input type="radio" name="substrate" value="{{ sub }}" class="hidden peer"/>
+          <div class="p-4 border border-slate-700 peer-checked:border-cyan-400 peer-checked:bg-cyan-400/10 hover:border-slate-500 transition-all text-center">
+            <p class="font-tech text-xs font-bold text-white">{{ sub }}</p>
+          </div>
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+    <!-- Step 6: Cost Estimate -->
+    <div class="step-panel hidden" id="panel-6">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">COST ESTIMATE</h3>
+      <div class="p-8 border border-cyan-900 bg-cyan-950/20 text-center mb-8">
+        <p class="text-slate-400 text-sm mb-4">Based on your configuration:</p>
+        <p class="font-tech text-5xl font-bold text-cyan-400 mb-2" id="cost-display">$---</p>
+        <p class="text-slate-500 text-xs">Estimated unit price for 1–9 units</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Quantity</label>
+          <input id="qty-config" type="number" min="1" value="1" class="form-input-dark"/>
+        </div>
+        <div>
+          <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Contact Email</label>
+          <input id="contact-email-config" type="email" placeholder="your@email.com" class="form-input-dark" value="{% if request.state.user %}{{ request.state.user.email }}{% endif %}"/>
+        </div>
+      </div>
+    </div>
+    <!-- Step 7: Finalize -->
+    <div class="step-panel hidden" id="panel-7">
+      <h3 class="font-tech text-xl font-bold text-white mb-8">FINALIZE QUOTE REQUEST</h3>
+      <div class="mb-6">
+        <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Additional Notes</label>
+        <textarea id="config-notes" rows="4" placeholder="Special requirements, tolerances, delivery constraints..." class="form-input-dark resize-none"></textarea>
+      </div>
+      <div id="config-summary" class="p-6 border border-slate-700 bg-slate-900/50 text-sm space-y-2 mb-6"></div>
+      <button id="submit-quote-btn" onclick="submitQuote()" class="btn-primary w-full">SUBMIT QUOTE REQUEST</button>
+    </div>
+    <!-- Navigation -->
+    <div class="flex justify-between mt-8 pt-6 border-t border-slate-800">
+      <button id="btn-prev" onclick="prevStep()" class="btn-secondary" style="display:none">← PREVIOUS</button>
+      <div></div>
+      <button id="btn-next" onclick="nextStep()" class="btn-primary">NEXT STEP →</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+let currentStep = 1;
+const totalSteps = 7;
+const config = {};
+
+function updateStepUI() {
+  document.querySelectorAll('.step-panel').forEach((p, i) => {
+    p.classList.toggle('hidden', i + 1 !== currentStep);
+  });
+  document.querySelectorAll('.step-circle').forEach((c, i) => {
+    c.classList.toggle('active', i + 1 === currentStep);
+    c.classList.toggle('completed', i + 1 < currentStep);
+  });
+  document.getElementById('btn-prev').style.display = currentStep > 1 ? 'inline-flex' : 'none';
+  document.getElementById('btn-next').style.display = currentStep < totalSteps ? 'inline-flex' : 'none';
+  if (currentStep === 6) updateCostEstimate();
+  if (currentStep === 7) updateSummary();
+}
+
+function updateCostEstimate() {
+  const base = config.product_type?.includes('PA') ? 450 :
+    config.product_type?.includes('VCO') ? 380 :
+    config.product_type?.includes('LNA') ? 280 :
+    config.product_type?.includes('BPF') ? 220 : 300;
+  const techMult = config.technology?.includes('GaN') ? 2.5 :
+    config.technology?.includes('GaAs') ? 2.0 :
+    config.technology?.includes('SIW') ? 1.4 : 1.0;
+  const est = Math.round(base * techMult);
+  config.estimated_cost = est;
+  document.getElementById('cost-display').textContent = `$${est}`;
+}
+
+function updateSummary() {
+  const s = document.getElementById('config-summary');
+  s.innerHTML = Object.entries(config).filter(([k]) => k !== 'estimated_cost').map(([k, v]) =>
+    `<div class="flex justify-between"><span class="text-slate-500 uppercase text-xs tracking-wider">${k.replace(/_/g, ' ')}</span><span class="text-white font-mono">${v}</span></div>`
+  ).join('');
+}
+
+function nextStep() {
+  // Collect data from current step
+  if (currentStep === 1) config.product_type = document.querySelector('[name=product_type]:checked')?.value || '';
+  if (currentStep === 2) config.technology = document.querySelector('[name=technology]:checked')?.value || '';
+  if (currentStep === 3) { config.frequency_min = document.getElementById('freq-min').value; config.frequency_max = document.getElementById('freq-max').value; }
+  if (currentStep === 4) { config.parameters = { gain: document.getElementById('param-gain').value, noise_figure: document.getElementById('param-nf').value, power: document.getElementById('param-power').value }; }
+  if (currentStep === 5) config.substrate = document.querySelector('[name=substrate]:checked')?.value || '';
+  if (currentStep === 6) { config.quantity = document.getElementById('qty-config').value; config.contact_email = document.getElementById('contact-email-config').value; }
+  if (currentStep < totalSteps) { currentStep++; updateStepUI(); }
+}
+
+function prevStep() {
+  if (currentStep > 1) { currentStep--; updateStepUI(); }
+}
+
+async function submitQuote() {
+  config.notes = document.getElementById('config-notes').value;
+  const btn = document.getElementById('submit-quote-btn');
+  btn.textContent = 'SUBMITTING...';
+  btn.disabled = true;
+  const res = await fetch('/configurator/quote', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(config)
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('configurator-form').innerHTML = `
+      <div class="text-center py-16">
+        <div class="w-16 h-16 border border-green-500 flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <h3 class="font-tech text-2xl font-bold text-white mb-4">QUOTE REQUEST #${data.quote_id} SUBMITTED</h3>
+        <p class="text-slate-400">Our RF engineers will review and respond within 24 hours.</p>
+        <a href="/" class="btn-primary mt-8 inline-flex">BACK TO HOME</a>
+      </div>
+    `;
+  }
+}
+
+updateStepUI();
+</script>
+{% endblock %}

@@ -1,0 +1,469 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block head_extra %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+{% block content %}
+<div class="py-12 container mx-auto px-6">
+  <!-- Breadcrumb -->
+  <div class="flex items-center space-x-2 text-xs font-mono text-slate-500 mb-8">
+    <a href="/" class="hover:text-cyan-400">HOME</a>
+    <span>/</span>
+    <a href="/products" class="hover:text-cyan-400">CATALOG</a>
+    <span>/</span>
+    <span class="text-cyan-400">{{ product.sku }}</span>
+  </div>
+  <!-- Main product section -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
+    <!-- Image -->
+    <div class="aspect-square bg-slate-900 border border-slate-800 flex items-center justify-center relative">
+      {% if product.image_url %}
+      <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-contain p-8"/>
+      {% else %}
+      <svg class="w-24 h-24 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+      {% endif %}
+      {% if product.stock_quantity > 0 %}
+      <span class="absolute top-4 left-4 badge-stock">IN STOCK — {{ product.stock_quantity }} units</span>
+      {% else %}
+      <span class="absolute top-4 left-4 badge-archived">OUT OF STOCK</span>
+      {% endif %}
+    </div>
+    <!-- Info -->
+    <div>
+      <p class="font-mono text-xs text-cyan-400 mb-2">{{ product.sku }}</p>
+      <h2 class="font-tech text-3xl font-bold text-white mb-4 leading-tight">{{ product.name }}</h2>
+      <p class="text-slate-400 leading-relaxed mb-8">{{ product.description or 'High-performance RF component manufactured to precision specifications.' }}</p>
+      <!-- Technical Specs -->
+      {% if product.frequency_min or product.gain or product.noise_figure %}
+      <div class="border border-slate-800 mb-8">
+        <div class="px-4 py-3 border-b border-slate-800 bg-slate-900/50">
+          <h4 class="font-tech text-xs font-bold tracking-widest text-slate-400 uppercase">Key Specifications</h4>
+        </div>
+        <table class="data-table">
+          {% if product.frequency_min and product.frequency_max %}
+          <tr><td class="text-slate-500">Frequency Range</td><td class="text-white font-mono">{{ product.frequency_min }} – {{ product.frequency_max }} GHz</td></tr>
+          {% endif %}
+          {% if product.gain %}
+          <tr><td class="text-slate-500">Gain</td><td class="text-white font-mono">{{ product.gain }} dB</td></tr>
+          {% endif %}
+          {% if product.noise_figure %}
+          <tr><td class="text-slate-500">Noise Figure</td><td class="text-white font-mono">{{ product.noise_figure }} dB</td></tr>
+          {% endif %}
+          {% if product.power_output %}
+          <tr><td class="text-slate-500">Output Power</td><td class="text-white font-mono">{{ product.power_output }} dBm</td></tr>
+          {% endif %}
+        </table>
+      </div>
+      {% endif %}
+      <!-- Price & Actions -->
+      <div class="flex items-end justify-between mb-6">
+        <div>
+          <p class="text-slate-400 text-xs mb-1">Unit Price</p>
+          <p class="font-tech text-4xl font-bold text-cyan-400">${{ "%.2f"|format(product.price) }}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <label class="text-slate-400 text-xs">QTY</label>
+          <input id="qty-input" type="number" value="1" min="1" max="{{ product.stock_quantity or 1 }}"
+            class="w-20 bg-slate-800 border border-slate-700 text-white text-center py-3 font-mono"/>
+        </div>
+      </div>
+      <div class="flex space-x-3">
+        <button id="add-to-cart-btn" onclick="addToCart()" class="btn-primary flex-1">
+          ADD TO CART
+        </button>
+        <button id="favorite-btn" onclick="toggleFavorite('{{ product.id }}')" class="btn-secondary px-4" title="Add to favorites">
+          <svg class="w-5 h-5" id="fav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Files & Engineering Data -->
+  {% if product.datasheet_url or product.data_file_url or product.pcb_layout_url %}
+  <div class="mb-20">
+    <h3 class="font-tech text-xl font-bold text-white mb-6 uppercase tracking-wider">Engineering & Design Resources</h3>
+    <!-- Tab Bar -->
+    <div class="flex flex-wrap bg-slate-900/60 border border-slate-800 p-1 select-none mb-6">
+      {% if product.datasheet_url %}
+      <button onclick="switchTab('datasheet')" id="tab-btn-datasheet" class="tab-btn flex items-center space-x-2 px-6 py-3 text-xs font-mono font-bold tracking-wider text-slate-400 hover:text-white uppercase transition-all duration-200 border-b-2 border-transparent">
+        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        <span>DATASHEET (PDF)</span>
+      </button>
+      {% endif %}
+      
+      {% if product.data_file_url %}
+      <button onclick="switchTab('data')" id="tab-btn-data" class="tab-btn flex items-center space-x-2 px-6 py-3 text-xs font-mono font-bold tracking-wider text-slate-400 hover:text-white uppercase transition-all duration-200 border-b-2 border-transparent">
+        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+        <span>VIEW DATA</span>
+      </button>
+      
+      <button onclick="switchTab('graphs')" id="tab-btn-graphs" class="tab-btn flex items-center space-x-2 px-6 py-3 text-xs font-mono font-bold tracking-wider text-slate-400 hover:text-white uppercase transition-all duration-200 border-b-2 border-transparent">
+        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+        <span>VIEW GRAPHS</span>
+      </button>
+      {% endif %}
+      
+      {% if product.pcb_layout_url %}
+      <button onclick="switchTab('pcb')" id="tab-btn-pcb" class="tab-btn flex items-center space-x-2 px-6 py-3 text-xs font-mono font-bold tracking-wider text-slate-400 hover:text-white uppercase transition-all duration-200 border-b-2 border-transparent">
+        <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>
+        <span>PCB LAYOUT</span>
+      </button>
+      {% endif %}
+      
+
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="bg-slate-900/30 border border-slate-800 p-6 min-h-[350px] relative">
+      <!-- Datasheet Tab -->
+      {% if product.datasheet_url %}
+      <div id="tab-content-datasheet" class="tab-content hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div>
+            <h4 class="font-tech text-lg text-white">TECHNICAL DATASHEET</h4>
+            <p class="text-xs text-slate-500 font-mono">PDF specification sheet with full electrical & mechanical details.</p>
+          </div>
+          <a href="{{ product.datasheet_url }}" download class="btn-secondary py-2 px-4 text-xs font-mono">
+            DOWNLOAD PDF
+          </a>
+        </div>
+        <div class="aspect-[16/9] w-full border border-slate-800 bg-slate-955/80 flex items-center justify-center">
+          <iframe src="{{ product.datasheet_url }}" class="w-full h-full" style="border: none;"></iframe>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- View Data Tab -->
+      {% if product.data_file_url %}
+      <div id="tab-content-data" class="tab-content hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div>
+            <h4 class="font-tech text-lg text-white">CALIBRATION & S-PARAMETER DATA</h4>
+            <p class="text-xs text-slate-500 font-mono">Raw measured laboratory data for this component model.</p>
+          </div>
+          <a href="{{ product.data_file_url }}" download class="btn-secondary py-2 px-4 text-xs font-mono">
+            DOWNLOAD RAW CSV
+          </a>
+        </div>
+        <!-- Table container -->
+        <div class="overflow-x-auto border border-slate-800 max-h-96">
+          <table class="data-table w-full text-left border-collapse" id="calibration-data-table">
+            <thead>
+              <tr class="bg-slate-900 border-b border-slate-800">
+                <th class="p-3 text-xs font-mono font-bold tracking-widest text-slate-400">Loading data...</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="p-4 text-slate-500 text-sm font-mono">Initializing reader...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- View Graphs Tab -->
+      <div id="tab-content-graphs" class="tab-content hidden space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div>
+            <h4 class="font-tech text-lg text-white">PERFORMANCE PLOTS</h4>
+            <p class="text-xs text-slate-500 font-mono">Interactive graphs generated dynamically from calibrated laboratory measurements.</p>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-slate-950/60 border border-slate-800 p-4">
+            <h5 class="font-tech text-sm text-slate-300 mb-4 tracking-wider text-center">GAIN & NOISE FIGURE VS FREQUENCY</h5>
+            <div class="relative h-64">
+              <canvas id="gainNfChart"></canvas>
+            </div>
+          </div>
+          <div class="bg-slate-950/60 border border-slate-800 p-4">
+            <h5 class="font-tech text-sm text-slate-300 mb-4 tracking-wider text-center">RETURN LOSS VS FREQUENCY</h5>
+            <div class="relative h-64">
+              <canvas id="returnLossChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- PCB Layout Tab -->
+      {% if product.pcb_layout_url %}
+      <div id="tab-content-pcb" class="tab-content hidden space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div>
+            <h4 class="font-tech text-lg text-white">PCB LAYOUT & DIMENSIONS</h4>
+            <p class="text-xs text-slate-500 font-mono">Evaluation board layout and footprint details.</p>
+          </div>
+          <a href="{{ product.pcb_layout_url }}" download class="btn-secondary py-2 px-4 text-xs font-mono">
+            DOWNLOAD LAYOUT
+          </a>
+        </div>
+        <div class="aspect-[16/9] w-full border border-slate-800 bg-slate-955/80 flex items-center justify-center">
+          {% if product.pcb_layout_url.endswith('.pdf') %}
+          <iframe src="{{ product.pcb_layout_url }}" class="w-full h-full" style="border: none;"></iframe>
+          {% else %}
+          <img src="{{ product.pcb_layout_url }}" class="max-w-full max-h-full object-contain p-4" alt="PCB Layout Preview"/>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Related Products -->
+  {% if related %}
+  <div>
+    <h3 class="font-tech text-xl font-bold text-white mb-8">RELATED COMPONENTS</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      {% for p in related %}
+      <a href="/products/{{ p.slug }}" class="bg-slate-900/60 border border-slate-800 card-hover p-4 block">
+        <p class="font-mono text-xs text-slate-500 mb-1">{{ p.sku }}</p>
+        <h5 class="font-tech text-xs font-bold text-white mb-2">{{ p.name }}</h5>
+        <p class="text-cyan-400 font-bold text-sm">${{ "%.2f"|format(p.price) }}</p>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function addToCart() {
+  const qty = document.getElementById('qty-input').value;
+  const fd = new FormData();
+  fd.append('product_id', '{{ product.id }}');
+  fd.append('quantity', qty);
+  const btn = document.getElementById('add-to-cart-btn');
+  btn.textContent = 'ADDING...';
+  const res = await fetch('/cart/add', {method: 'POST', body: fd});
+  const data = await res.json();
+  if (data.success) {
+    btn.textContent = '✓ ADDED TO CART';
+    const counter = document.getElementById('cart-count');
+    if (counter) { counter.textContent = data.cart_count; counter.classList.remove('hidden'); }
+    setTimeout(() => btn.textContent = 'ADD TO CART', 2000);
+  } else {
+    window.location = '/auth/login';
+  }
+}
+async function toggleFavorite(productId) {
+  const fd = new FormData();
+  fd.append('product_id', productId);
+  const res = await fetch('/dashboard/favorites/toggle', {method: 'POST', body: fd});
+  const data = await res.json();
+  if (data.action === 'added') {
+    document.getElementById('fav-icon').setAttribute('fill', 'currentColor');
+    document.getElementById('fav-icon').style.color = '#00BAFF';
+  } else {
+    document.getElementById('fav-icon').setAttribute('fill', 'none');
+    document.getElementById('fav-icon').style.color = '';
+  }
+}
+
+let csvData = null;
+let chartsInitialized = false;
+
+async function loadCalibrationData() {
+  if (csvData) return;
+  const url = "{{ product.data_file_url }}";
+  if (!url) return;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("Failed to load data");
+    const text = await res.text();
+    csvData = parseCSV(text);
+    renderDataTable(csvData);
+  } catch (err) {
+    console.error(err);
+    document.getElementById('calibration-data-table').innerHTML = `
+      <tr><td class="p-4 text-red-500 font-mono">Error loading engineering data file.</td></tr>
+    `;
+  }
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length === 0) return { headers: [], rows: [] };
+  const headers = lines[0].split(',').map(h => h.trim());
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const values = lines[i].split(',').map(v => v.trim());
+    const row = {};
+    headers.forEach((header, idx) => {
+      row[header] = values[idx];
+    });
+    rows.push(row);
+  }
+  return { headers, rows };
+}
+
+function renderDataTable(data) {
+  const table = document.getElementById('calibration-data-table');
+  if (!table) return;
+  
+  // Headers
+  let headerHtml = '<tr class="bg-slate-900 border-b border-slate-800">';
+  data.headers.forEach(h => {
+    headerHtml += `<th class="p-3 text-xs font-mono font-bold tracking-widest text-slate-400 uppercase">${h}</th>`;
+  });
+  headerHtml += '</tr>';
+  
+  // Rows
+  let bodyHtml = '';
+  data.rows.forEach(row => {
+    bodyHtml += '<tr class="hover:bg-slate-900/40 border-b border-slate-900/50">';
+    data.headers.forEach(h => {
+      bodyHtml += `<td class="p-3 text-slate-300 text-sm font-mono">${row[h]}</td>`;
+    });
+    bodyHtml += '</tr>';
+  });
+  
+  table.innerHTML = `
+    <thead>${headerHtml}</thead>
+    <tbody>${bodyHtml}</tbody>
+  `;
+}
+
+function initCharts() {
+  if (chartsInitialized || !csvData) return;
+  
+  const labels = csvData.rows.map(r => r['Frequency (GHz)'] || r['Freq (GHz)'] || r['Frequency'] || '');
+  const gains = csvData.rows.map(r => parseFloat(r['Gain (dB)'] || r['Gain'] || 0));
+  const nfs = csvData.rows.map(r => parseFloat(r['Noise Figure (dB)'] || r['NF (dB)'] || r['NF'] || 0));
+  const rls = csvData.rows.map(r => parseFloat(r['Return Loss (dB)'] || r['RL (dB)'] || r['Return Loss'] || 0));
+  
+  const ctx1 = document.getElementById('gainNfChart').getContext('2d');
+  new Chart(ctx1, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Gain (dB)',
+          data: gains,
+          borderColor: '#00BAFF',
+          backgroundColor: 'rgba(0, 186, 255, 0.1)',
+          yAxisID: 'y-gain',
+          borderWidth: 2,
+          tension: 0.2
+        },
+        {
+          label: 'Noise Figure (dB)',
+          data: nfs,
+          borderColor: '#f59e0b',
+          backgroundColor: 'transparent',
+          yAxisID: 'y-nf',
+          borderWidth: 2,
+          borderDash: [5, 5],
+          tension: 0.2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          grid: { color: '#1e293b' },
+          ticks: { color: '#94a3b8', font: { family: 'Courier New' } },
+          title: { display: true, text: 'Frequency (GHz)', color: '#94a3b8' }
+        },
+        'y-gain': {
+          type: 'linear',
+          position: 'left',
+          grid: { color: '#1e293b' },
+          ticks: { color: '#00BAFF', font: { family: 'Courier New' } },
+          title: { display: true, text: 'Gain (dB)', color: '#00BAFF' }
+        },
+        'y-nf': {
+          type: 'linear',
+          position: 'right',
+          grid: { drawOnChartArea: false },
+          ticks: { color: '#f59e0b', font: { family: 'Courier New' } },
+          title: { display: true, text: 'Noise Figure (dB)', color: '#f59e0b' }
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#f8fafc', font: { family: 'Orbitron' } } }
+      }
+    }
+  });
+
+  const ctx2 = document.getElementById('returnLossChart').getContext('2d');
+  new Chart(ctx2, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Return Loss (dB)',
+          data: rls,
+          borderColor: '#ec4899',
+          backgroundColor: 'rgba(236, 72, 153, 0.1)',
+          borderWidth: 2,
+          tension: 0.2
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          grid: { color: '#1e293b' },
+          ticks: { color: '#94a3b8', font: { family: 'Courier New' } },
+          title: { display: true, text: 'Frequency (GHz)', color: '#94a3b8' }
+        },
+        y: {
+          grid: { color: '#1e293b' },
+          ticks: { color: '#ec4899', font: { family: 'Courier New' } },
+          title: { display: true, text: 'Return Loss (dB)', color: '#ec4899' }
+        }
+      },
+      plugins: {
+        legend: { labels: { color: '#f8fafc', font: { family: 'Orbitron' } } }
+      }
+    }
+  });
+  chartsInitialized = true;
+}
+
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.remove('text-cyan-400', 'border-cyan-400', 'bg-cyan-950/20');
+    btn.classList.add('text-slate-400', 'hover:text-white', 'border-transparent');
+  });
+  
+  const activeContent = document.getElementById('tab-content-' + tabId);
+  if (activeContent) activeContent.classList.remove('hidden');
+  
+  const activeBtn = document.getElementById('tab-btn-' + tabId);
+  if (activeBtn) {
+    activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'border-transparent');
+    activeBtn.classList.add('text-cyan-400', 'border-cyan-400', 'bg-cyan-950/20');
+  }
+  
+  if (tabId === 'data' || tabId === 'graphs') {
+    loadCalibrationData().then(() => {
+      if (tabId === 'graphs') {
+        setTimeout(initCharts, 50);
+      }
+    });
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const firstTab = document.querySelector('.tab-btn');
+  if (firstTab) {
+    firstTab.click();
+  }
+});
+</script>
+{% endblock %}

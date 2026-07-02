@@ -1,0 +1,114 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}{% if product %}Edit Product{% else %}New Product{% endif %}{% endblock %}
+{% block page_title %}{% if product %}EDIT PRODUCT{% else %}NEW PRODUCT{% endif %}{% endblock %}
+{% block admin_content %}
+<form method="POST" enctype="multipart/form-data" class="max-w-3xl space-y-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Product Name *</label>
+      <input id="admin-product-name" name="name" type="text" required value="{{ product.name if product else '' }}" class="form-input-dark"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">SKU *</label>
+      <input id="admin-product-sku" name="sku" type="text" required value="{{ product.sku if product else '' }}" class="form-input-dark"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">URL Slug *</label>
+      <input id="admin-product-slug" name="slug" type="text" required value="{{ product.slug if product else '' }}" class="form-input-dark"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Category</label>
+      <select id="admin-product-category" name="category_id" class="form-input-dark">
+        <option value="">— None —</option>
+        {% for cat in categories %}
+        <option value="{{ cat.id }}" {% if product and product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+  <div>
+    <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Description</label>
+    <textarea id="admin-product-desc" name="description" rows="4" class="form-input-dark resize-none">{{ product.description if product else '' }}</textarea>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div>
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Price (USD) *</label>
+      <input id="admin-product-price" name="price" type="number" step="0.01" min="0" required value="{{ product.price if product else '' }}" class="form-input-dark"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Stock Quantity</label>
+      <input id="admin-product-stock" name="stock_quantity" type="number" min="0" value="{{ product.stock_quantity if product else 0 }}" class="form-input-dark"/>
+    </div>
+    <div class="flex items-end">
+      <label class="flex items-center space-x-3 cursor-pointer">
+        <input id="admin-product-active" name="is_active" type="checkbox" {% if not product or product.is_active %}checked{% endif %} class="w-4 h-4"/>
+        <span class="text-sm text-slate-300">Active / Visible</span>
+      </label>
+    </div>
+  </div>
+  <div>
+    <p class="text-xs font-bold tracking-widest text-slate-400 uppercase mb-4">RF Specifications (Optional)</p>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Freq Min (GHz)</label>
+        <input id="admin-freq-min" name="frequency_min" type="number" step="0.01" value="{{ product.frequency_min if product else '' }}" class="form-input-dark"/>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Freq Max (GHz)</label>
+        <input id="admin-freq-max" name="frequency_max" type="number" step="0.01" value="{{ product.frequency_max if product else '' }}" class="form-input-dark"/>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Gain (dB)</label>
+        <input id="admin-gain" name="gain" type="number" step="0.1" value="{{ product.gain if product else '' }}" class="form-input-dark"/>
+      </div>
+      <div>
+        <label class="block text-xs text-slate-500 mb-1">Noise Figure (dB)</label>
+        <input id="admin-nf" name="noise_figure" type="number" step="0.1" value="{{ product.noise_figure if product else '' }}" class="form-input-dark"/>
+      </div>
+    </div>
+  </div>
+  <div>
+    <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase mb-2">Product Image</label>
+    {% if product and product.image_url %}
+    <img src="{{ product.image_url }}" class="w-24 h-24 object-cover mb-3 border border-slate-700"/>
+    {% endif %}
+    <input id="admin-product-image" name="image" type="file" accept="image/*" class="text-sm text-slate-400 mb-4"/>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-slate-800 bg-slate-900/30">
+    <div class="space-y-2">
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase">Datasheet (PDF)</label>
+      {% if product and product.datasheet_url %}
+      <div class="text-xs text-cyan-400 font-mono">
+        Current: <a href="{{ product.datasheet_url }}" target="_blank" class="hover:underline hover:text-cyan-300">{{ product.datasheet_url.split('/')[-1] }}</a>
+      </div>
+      {% endif %}
+      <input id="admin-product-datasheet" name="datasheet" type="file" accept=".pdf" class="text-xs text-slate-400 block w-full file:mr-4 file:py-1 file:px-3 file:border file:border-slate-700 file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer"/>
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase">Calibration Data File (CSV)</label>
+      {% if product and product.data_file_url %}
+      <div class="text-xs text-cyan-400 font-mono">
+        Current: <a href="{{ product.data_file_url }}" target="_blank" class="hover:underline hover:text-cyan-300">{{ product.data_file_url.split('/')[-1] }}</a>
+      </div>
+      {% endif %}
+      <input id="admin-product-datafile" name="data_file" type="file" accept=".csv" class="text-xs text-slate-400 block w-full file:mr-4 file:py-1 file:px-3 file:border file:border-slate-700 file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer"/>
+    </div>
+
+    <div class="space-y-2">
+      <label class="block text-xs font-bold tracking-widest text-slate-400 uppercase">PCB Layout (PDF/Image)</label>
+      {% if product and product.pcb_layout_url %}
+      <div class="text-xs text-cyan-400 font-mono">
+        Current: <a href="{{ product.pcb_layout_url }}" target="_blank" class="hover:underline hover:text-cyan-300">{{ product.pcb_layout_url.split('/')[-1] }}</a>
+      </div>
+      {% endif %}
+      <input id="admin-product-pcb" name="pcb_layout" type="file" accept=".pdf,image/*" class="text-xs text-slate-400 block w-full file:mr-4 file:py-1 file:px-3 file:border file:border-slate-700 file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer"/>
+    </div>
+  </div>
+
+  <div class="flex space-x-4 pt-4">
+    <button id="admin-product-save" type="submit" class="btn-primary">{% if product %}SAVE CHANGES{% else %}CREATE PRODUCT{% endif %}</button>
+    <a href="/admin/products" class="btn-secondary">CANCEL</a>
+  </div>
+</form>
+{% endblock %}

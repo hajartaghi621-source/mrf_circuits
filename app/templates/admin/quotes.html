@@ -1,0 +1,209 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Quotes{% endblock %}
+{% block page_title %}Configurator Quotes{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-8">
+  <!-- Filter & Stats -->
+  <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-6 border border-slate-800">
+    <div class="flex items-center space-x-4">
+      <span class="text-sm font-mono text-slate-400">// Filter Status:</span>
+      <div class="flex space-x-2">
+        <a href="/admin/quotes" class="px-3 py-1.5 text-xs font-mono border {% if not status_filter %}bg-cyan-500 text-black border-cyan-500{% else %}border-slate-700 text-slate-400 hover:border-cyan-400 hover:text-white{% endif %} transition-colors">
+          ALL
+        </a>
+        {% for st in ['pending', 'reviewed', 'accepted', 'rejected'] %}
+        <a href="/admin/quotes?status={{ st }}" class="px-3 py-1.5 text-xs font-mono border {% if status_filter == st %}bg-cyan-500 text-black border-cyan-500{% else %}border-slate-700 text-slate-400 hover:border-cyan-400 hover:text-white{% endif %} transition-colors">
+          {{ st | upper }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="text-xs font-mono text-slate-500">
+      Total: <span class="text-white">{{ quotes | length }}</span> quotes found
+    </div>
+  </div>
+
+  <!-- Quotes List Table -->
+  <div class="bg-slate-900 border border-slate-800 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-slate-800 bg-slate-950 text-slate-400 text-xs font-mono tracking-wider uppercase">
+            <th class="py-4 px-6">Quote Ref</th>
+            <th class="py-4 px-6">Product / Tech</th>
+            <th class="py-4 px-6">Frequency</th>
+            <th class="py-4 px-6">Contact / User</th>
+            <th class="py-4 px-6 text-right">Est Cost</th>
+            <th class="py-4 px-6 text-center">Status</th>
+            <th class="py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800 text-sm">
+          {% for quote in quotes %}
+          <tr class="hover:bg-slate-800/30 transition-colors">
+            <td class="py-4 px-6 font-mono font-bold text-cyan-400">
+              {{ quote.quote_ref }}
+            </td>
+            <td class="py-4 px-6">
+              <div class="font-medium text-white font-tech uppercase">{{ quote.product_type }}</div>
+              <div class="text-xs text-slate-500 font-mono">{{ quote.technology or 'N/A' }}</div>
+            </td>
+            <td class="py-4 px-6 font-mono text-slate-300 text-xs">
+              {% if quote.frequency_min and quote.frequency_max %}
+              {{ quote.frequency_min }} - {{ quote.frequency_max }} GHz
+              {% else %}
+              {{ quote.frequency_band or 'N/A' }}
+              {% endif %}
+            </td>
+            <td class="py-4 px-6 font-mono text-xs">
+              <span class="text-slate-300">{{ quote.user_email }}</span>
+              <span class="block text-[10px] text-slate-500">{{ quote.user_name }}</span>
+            </td>
+            <td class="py-4 px-6 text-right font-mono text-white font-semibold">
+              {% if quote.estimated_cost %}
+              ${{ "%.2f"|format(quote.estimated_cost) }}
+              {% else %}
+              TBD
+              {% endif %}
+            </td>
+            <td class="py-4 px-6 text-center">
+              <span class="inline-block px-2.5 py-0.5 text-xs font-semibold rounded-none border {% if quote.status == 'pending' %}bg-yellow-950/40 text-yellow-400 border-yellow-800/60{% elif quote.status == 'reviewed' %}bg-cyan-950/40 text-cyan-400 border-cyan-800/60{% elif quote.status == 'accepted' %}bg-green-950/40 text-green-400 border-green-800/60{% else %}bg-red-950/40 text-red-400 border-red-800/60{% endif %}">
+                {{ quote.status | upper }}
+              </span>
+            </td>
+            <td class="py-4 px-6 text-right font-mono text-xs">
+              <button onclick="toggleDetails('quote-details-{{ quote.id }}')" class="text-cyan-400 hover:text-white transition-colors">
+                REVIEW DETAILS [+/-]
+              </button>
+            </td>
+          </tr>
+          <!-- Expandable Details & Notes -->
+          <tr id="quote-details-{{ quote.id }}" class="hidden bg-slate-950/50">
+            <td colspan="7" class="p-6">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs font-mono">
+                <!-- Parameters list -->
+                <div class="space-y-4 text-slate-400">
+                  <div>
+                    <h4 class="text-white font-bold mb-3 uppercase tracking-wider text-xs border-b border-slate-800 pb-2">// TECHNICAL CONFIGURATION</h4>
+                    <ul class="space-y-2 mt-2">
+                      <li><span class="text-slate-600 uppercase">SUBSTRATE:</span> <span class="text-slate-300 font-sans font-semibold">{{ quote.substrate or 'Default Rogers/FR4' }}</span></li>
+                      <li><span class="text-slate-600 uppercase">ENCLOSURE:</span> <span class="text-slate-300 font-sans font-semibold">{{ quote.enclosure_type or 'None (Open Microstrip)' }}</span></li>
+                      <li><span class="text-slate-600 uppercase">QUANTITY:</span> <span class="text-slate-300 font-semibold">{{ quote.quantity or 1 }}</span></li>
+                    </ul>
+                  </div>
+                  <div>
+                    <span class="text-slate-600 uppercase block mb-1">SPECIFIC PARAMETERS:</span>
+                    <div class="bg-slate-900 border border-slate-800 p-4 font-mono text-[11px] overflow-auto text-slate-300">
+                      {% if quote.parameters %}
+                        {% for key, val in quote.parameters.items() %}
+                          <div class="flex justify-between py-1 border-b border-slate-800/50 last:border-0">
+                            <span class="text-slate-500 uppercase">{{ key }}:</span>
+                            <span class="font-bold text-cyan-400">{{ val }}</span>
+                          </div>
+                        {% endfor %}
+                      {% else %}
+                        // No specific parameters logged
+                      {% endif %}
+                    </div>
+                  </div>
+                  {% if quote.notes %}
+                  <div>
+                    <span class="text-slate-600 uppercase block mb-1">CUSTOMER NOTES:</span>
+                    <p class="text-slate-300 font-sans bg-slate-900 border border-slate-800 p-3 italic">"{{ quote.notes }}"</p>
+                  </div>
+                  {% endif %}
+                </div>
+                <!-- Review Form -->
+                <div>
+                  <h4 class="text-white font-bold mb-4 uppercase tracking-wider text-xs border-b border-slate-800 pb-2">// ADMIN EVALUATION</h4>
+                  <form onsubmit="submitReview(event, '{{ quote.id }}')" class="space-y-4">
+                    <div>
+                      <label class="block text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">Change Status</label>
+                      <select name="status" class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 text-slate-300 px-3 py-2 text-xs font-mono outline-none">
+                        <option value="pending" {% if quote.status == 'pending' %}selected{% endif %}>PENDING</option>
+                        <option value="reviewed" {% if quote.status == 'reviewed' %}selected{% endif %}>REVIEWED</option>
+                        <option value="accepted" {% if quote.status == 'accepted' %}selected{% endif %}>ACCEPTED</option>
+                        <option value="rejected" {% if quote.status == 'rejected' %}selected{% endif %}>REJECTED</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-mono text-slate-500 uppercase tracking-wider mb-2">Admin Feedback & Notes (visible internally)</label>
+                      <textarea name="admin_notes" rows="4" placeholder="Add engineering remarks, cost breakdown adjustments, or follow-up details..." 
+                        class="w-full bg-slate-900 border border-slate-700 focus:border-cyan-400 text-slate-200 px-3 py-2 text-xs outline-none transition-colors">{{ quote.admin_notes or '' }}</textarea>
+                    </div>
+                    <button type="submit" class="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-bold tracking-widest font-mono transition-colors">
+                      SAVE QUOTE UPDATE
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="py-8 px-6 text-center text-slate-500 font-mono">
+              // No configurator quotes found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleDetails(rowId) {
+  const row = document.getElementById(rowId);
+  row.classList.toggle('hidden');
+}
+
+async function submitReview(event, quoteId) {
+  event.preventDefault();
+  const form = event.target;
+  const status = form.status.value;
+  const admin_notes = form.admin_notes.value;
+
+  try {
+    const formData = new FormData();
+    formData.append('status', status);
+    formData.append('admin_notes', admin_notes);
+    
+    const response = await fetch(`/admin/quotes/${quoteId}/status`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      showToast(`Quote updated to ${status.toUpperCase()}!`, 'success');
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      showToast(data.error || 'Failed to update quote', 'error');
+    }
+  } catch (err) {
+    showToast('Network error occurred.', 'error');
+  }
+}
+
+function showToast(message, type) {
+  const toast = document.createElement('div');
+  toast.className = `fixed bottom-5 right-5 z-50 p-4 font-mono text-xs border ${
+    type === 'success' ? 'bg-green-950/90 border-green-700 text-green-300' : 'bg-red-950/90 border-red-700 text-red-300'
+  } shadow-xl max-w-sm transition-all duration-300 transform translate-y-10 opacity-0`;
+  toast.innerText = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.remove('translate-y-10', 'opacity-0');
+  }, 100);
+  
+  setTimeout(() => {
+    toast.classList.add('translate-y-10', 'opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+</script>
+{% endblock %}

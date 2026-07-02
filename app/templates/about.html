@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}About MRF Circuits{% endblock %}
+{% block content %}
+<!-- HERO -->
+<section class="relative py-24 border-b border-slate-800 overflow-hidden">
+  <div class="scanlines"></div>
+  <div class="container mx-auto px-6">
+    <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-4">// About MRF Circuits</p>
+    <h2 class="font-tech text-5xl font-bold text-white mb-6 max-w-3xl leading-tight">BUILT FOR THE SPECTRUM.<br/><span class="text-cyan-400">BORN IN MOROCCO.</span></h2>
+    <p class="text-slate-400 text-lg max-w-2xl leading-relaxed">MRF Circuits is a precision RF engineering startup founded in Morocco. We design and manufacture high-performance microwave components for global defense, aerospace, and telecom markets.</p>
+  </div>
+</section>
+
+<!-- MISSION / VALUES -->
+<section class="py-24 container mx-auto px-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+    <div>
+      <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-4">// Our Mission</p>
+      <h3 class="font-tech text-3xl font-bold text-white mb-6">ENGINEERING THE INVISIBLE SPECTRUM</h3>
+      <p class="text-slate-400 leading-relaxed mb-6">We believe that world-class RF engineering shouldn't be limited to Silicon Valley. From Tetouan, we deliver components that compete with the best in the world — on precision, reliability, and speed.</p>
+      <p class="text-slate-400 leading-relaxed">Every filter, amplifier, and oscillator we ship is a statement: Moroccan engineering is ready for the global stage.</p>
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="p-6 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <p class="font-tech text-4xl font-bold text-cyan-400 mb-2">50+</p>
+        <p class="text-slate-400 text-sm">Component types in catalog</p>
+      </div>
+      <div class="p-6 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <p class="font-tech text-4xl font-bold text-cyan-400 mb-2">12</p>
+        <p class="text-slate-400 text-sm">City served</p>
+      </div>
+      <div class="p-6 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <p class="font-tech text-4xl font-bold text-cyan-400 mb-2">99.7%</p>
+        <p class="text-slate-400 text-sm">Quality pass rate</p>
+      </div>
+      <div class="p-6 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <p class="font-tech text-4xl font-bold text-cyan-400 mb-2">48h</p>
+        <p class="text-slate-400 text-sm">Average ship time</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="py-20 bg-slate-900/30 border-y border-slate-800">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-2">// The Team</p>
+      <h3 class="font-tech text-3xl font-bold text-white">RF ENGINEERS, NOT SALESPEOPLE</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-2xl mx-auto">
+      <div class="text-center">
+        <div class="w-24 h-24 mx-auto mb-4 bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden">
+          <img src="/static/pic/prof.png" alt="Prof. Yassine M." class="w-full h-full object-cover">
+        </div>
+        <h4 class="font-tech font-bold text-white">PROF. Taj ElDin</h4>
+        <p class="text-cyan-400 text-xs tracking-wider mt-1">PROJECT ADVISOR</p>
+        <p class="text-slate-500 text-xs mt-2">PhD Microwave Eng. — FS Tetouan</p>
+      </div>
+      <div class="text-center">
+        <div class="w-24 h-24 mx-auto mb-4 bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden">
+          <img src="/static/pic/student.png" alt="Imane Taghi" class="w-full h-full object-cover">
+        </div>
+        <h4 class="font-tech font-bold text-white">IMANE TAGHI</h4>
+        <p class="text-cyan-400 text-xs tracking-wider mt-1">MASTER'S STUDENT</p>
+        <p class="text-slate-500 text-xs mt-2">RF Front-End Receiver Chain Design</p>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

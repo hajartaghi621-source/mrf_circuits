@@ -1,0 +1,68 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Manage Products{% endblock %}
+{% block page_title %}PRODUCT MANAGEMENT{% endblock %}
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+  <form method="GET" action="/admin/products" class="flex space-x-3">
+    <input id="admin-search-products" name="q" type="text" value="{{ q }}" placeholder="Search products..." class="form-input-dark w-64"/>
+    <button type="submit" class="btn-primary">SEARCH</button>
+  </form>
+  <a href="/admin/products/new" class="btn-primary">+ ADD PRODUCT</a>
+</div>
+<div class="border border-slate-800 overflow-hidden">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>IMAGE</th>
+        <th>NAME / SKU</th>
+        <th>PRICE</th>
+        <th>STOCK</th>
+        <th>STATUS</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr>
+        <td class="w-16">
+          {% if product.image_url %}
+          <img src="{{ product.image_url }}" class="w-12 h-12 object-cover bg-slate-800"/>
+          {% else %}
+          <div class="w-12 h-12 bg-slate-800 flex items-center justify-center">
+            <svg class="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          {% endif %}
+        </td>
+        <td>
+          <p class="text-white font-bold text-sm">{{ product.name }}</p>
+          <p class="text-slate-500 font-mono text-xs">{{ product.sku }}</p>
+        </td>
+        <td class="text-cyan-400 font-bold">${{ "%.2f"|format(product.price) }}</td>
+        <td class="{% if product.stock_quantity <= 5 %}text-red-400{% else %}text-white{% endif %} font-mono">{{ product.stock_quantity }}</td>
+        <td>
+          {% if product.is_active %}
+          <span class="badge-stock">ACTIVE</span>
+          {% else %}
+          <span class="badge-archived">INACTIVE</span>
+          {% endif %}
+        </td>
+        <td class="space-x-3">
+          <a href="/admin/products/{{ product.id }}/edit" class="text-cyan-400 hover:text-white text-xs font-mono">EDIT</a>
+          <form method="POST" action="/admin/products/{{ product.id }}/delete" class="inline">
+            <button type="submit" onclick="return confirm('Deactivate this product?')" class="text-red-400 hover:text-red-300 text-xs font-mono">DEACTIVATE</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="flex justify-center space-x-2 mt-6">
+  {% for p in range(1, total_pages + 1) %}
+  <a href="?q={{ q }}&page={{ p }}" class="px-3 py-1 border {% if p == page %}border-cyan-500 text-cyan-400{% else %}border-slate-700 text-slate-400{% endif %} text-sm font-mono">{{ p }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

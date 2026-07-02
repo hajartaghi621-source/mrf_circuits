@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}RF Components Catalog{% endblock %}
+{% block content %}
+<div class="py-16 container mx-auto px-6">
+  <!-- Header -->
+  <div class="mb-10">
+    <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-2">// Component Database</p>
+    <h2 class="font-tech text-3xl font-bold text-white">RF CATALOG</h2>
+    <p class="text-slate-400 text-sm mt-2">{{ total }} components found</p>
+  </div>
+  <!-- Search & Filters -->
+  <form method="GET" action="/products" class="flex flex-wrap gap-4 mb-10">
+    <div class="flex-1 min-w-[250px] relative">
+      <input id="catalog-search" name="q" type="text" value="{{ q }}" placeholder="Search: LNA, BPF, VCO, part number..."
+        class="form-input-dark pl-10"/>
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+    <select id="catalog-category" name="category" class="form-input-dark w-auto min-w-[180px]">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+      <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+      {% endfor %}
+    </select>
+    <select id="catalog-sort" name="sort" class="form-input-dark w-auto min-w-[160px]">
+      <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+      <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+      <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+      <option value="name" {% if sort == 'name' %}selected{% endif %}>Name A-Z</option>
+    </select>
+    <button type="submit" class="btn-primary">FILTER</button>
+  </form>
+  <!-- Product Grid -->
+  {% if products %}
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+    {% for product in products %}
+    <div class="bg-slate-900/60 border border-slate-800 card-hover group">
+      <a href="/products/{{ product.slug }}">
+        <div class="aspect-square bg-slate-800/50 relative overflow-hidden">
+          {% if product.image_url %}
+          <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+          {% else %}
+          <div class="w-full h-full flex items-center justify-center">
+            <svg class="w-12 h-12 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+          </div>
+          {% endif %}
+          {% if product.stock_quantity > 0 %}
+          <span class="absolute top-2 left-2 badge-stock">IN STOCK</span>
+          {% else %}
+          <span class="absolute top-2 left-2 badge-archived">OUT OF STOCK</span>
+          {% endif %}
+        </div>
+      </a>
+      <div class="p-4">
+        <p class="text-xs font-mono text-slate-500 mb-1">{{ product.sku }}</p>
+        <a href="/products/{{ product.slug }}">
+          <h4 class="font-tech text-sm font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors leading-snug">{{ product.name }}</h4>
+        </a>
+        {% if product.frequency_min and product.frequency_max %}
+        <p class="text-xs text-slate-500 mb-3">{{ product.frequency_min }}–{{ product.frequency_max }} GHz</p>
+        {% endif %}
+        <div class="flex items-center justify-between">
+          <p class="text-cyan-400 font-bold">${{ "%.2f"|format(product.price) }}</p>
+          <form method="POST" action="/cart/add" class="inline">
+            <input type="hidden" name="product_id" value="{{ product.id }}"/>
+            <input type="hidden" name="quantity" value="1"/>
+            <button type="submit" class="text-slate-400 hover:text-cyan-400 transition-colors p-2" title="Add to cart">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+  <div class="flex justify-center space-x-2">
+    {% for p in range(1, total_pages + 1) %}
+    <a href="?q={{ q }}&category={{ selected_category }}&sort={{ sort }}&page={{ p }}"
+      class="px-4 py-2 border {% if p == page %}border-cyan-500 text-cyan-400{% else %}border-slate-700 text-slate-400 hover:border-slate-500{% endif %} text-sm font-mono transition-colors">{{ p }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="text-center py-24 border border-slate-800">
+    <p class="font-tech text-xl text-white mb-4">NO COMPONENTS FOUND</p>
+    <p class="text-slate-400 text-sm">Try a different search term or category.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

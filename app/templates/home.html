@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}MRF Circuits — Engineering Precision{% endblock %}
+{% block content %}
+<!-- HERO SECTION -->
+<section class="relative min-h-[75vh] flex items-center justify-center overflow-hidden">
+  <div class="scanlines"></div>
+  <!-- Decorative circuit lines -->
+  <div class="absolute inset-0 overflow-hidden">
+    <svg class="absolute top-0 left-0 w-full h-full opacity-5" viewBox="0 0 1200 600" fill="none">
+      <path d="M0 300 H400 V150 H800 V300 H1200" stroke="#00BAFF" stroke-width="1"/>
+      <path d="M200 0 V200 H600 V400 H1000 V600" stroke="#00BAFF" stroke-width="0.5"/>
+      <circle cx="400" cy="150" r="6" fill="#00BAFF"/>
+      <circle cx="800" cy="300" r="6" fill="#00BAFF"/>
+      <circle cx="600" cy="200" r="4" fill="#00BAFF" opacity="0.5"/>
+    </svg>
+  </div>
+  <div class="container mx-auto px-6 text-center relative z-10">
+    <div class="inline-flex items-center space-x-2 border border-cyan-800 px-4 py-2 mb-8 text-xs font-mono text-cyan-400 tracking-widest">
+      <span class="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></span>
+      <span>SYSTEM ONLINE — RF SOLUTIONS v2.4.0</span>
+    </div>
+    <h2 class="font-tech text-5xl md:text-7xl font-bold tracking-tighter mb-6 leading-none">
+      <span class="text-white">ENGINEERING</span><br/>
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">PRECISION</span>
+    </h2>
+    <p class="text-slate-400 text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+      High-performance microwave and RF components for aerospace, defense, and telecommunications. Purpose-built for mission-critical systems.
+    </p>
+    <!-- Search Bar -->
+    <div class="max-w-2xl mx-auto relative mb-10" id="hero-search-container">
+      <input id="hero-search" type="text" placeholder="Search components: LNA, BPF, VCO, Splitter..."
+        class="w-full bg-slate-900/80 border border-slate-700 focus:border-cyan-400 text-white px-6 py-4 pr-16 text-sm font-mono outline-none transition-all"
+        autocomplete="off"/>
+      <button onclick="document.getElementById('hero-search').dispatchEvent(new Event('search'))" class="absolute right-0 top-0 h-full px-5 bg-cyan-500 hover:bg-cyan-400 text-black transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      </button>
+      <!-- Live search results dropdown -->
+      <div id="search-results" class="hidden absolute top-full left-0 right-0 bg-slate-900 border border-slate-700 border-t-0 z-50 max-h-80 overflow-y-auto"></div>
+    </div>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="/products" class="btn-primary">BROWSE CATALOG</a>
+      <a href="/configurator" class="btn-secondary">RF CONFIGURATOR</a>
+    </div>
+  </div>
+</section>
+
+<!-- LATEST PRODUCTS -->
+<section class="py-24 container mx-auto px-6">
+  <div class="flex items-end justify-between mb-12">
+    <div>
+      <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-2">// Latest Additions</p>
+      <h3 class="font-tech text-3xl font-bold text-white">NEW PRODUCTS</h3>
+    </div>
+    <a href="/products" class="text-sm font-semibold text-cyan-400 hover:text-white transition-colors tracking-wider">VIEW ALL →</a>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    {% for product in latest_products %}
+    <a href="/products/{{ product.slug }}" class="block bg-slate-900/60 border border-slate-800 card-hover group">
+      <div class="aspect-square bg-slate-800/50 relative overflow-hidden">
+        {% if product.image_url %}
+        <img src="{{ product.image_url }}" alt="{{ product.name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+        {% else %}
+        <div class="w-full h-full flex items-center justify-center">
+          <svg class="w-16 h-16 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+        </div>
+        {% endif %}
+        {% if product.stock_quantity > 0 %}
+        <span class="absolute top-2 left-2 badge-stock">IN STOCK</span>
+        {% else %}
+        <span class="absolute top-2 left-2 badge-archived">OUT OF STOCK</span>
+        {% endif %}
+      </div>
+      <div class="p-4">
+        <p class="text-xs font-mono text-slate-500 mb-1">{{ product.sku }}</p>
+        <h4 class="font-tech text-sm font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">{{ product.name }}</h4>
+        {% if product.frequency_min and product.frequency_max %}
+        <p class="text-xs text-slate-500 mb-3">{{ product.frequency_min }}–{{ product.frequency_max }} GHz</p>
+        {% endif %}
+        <p class="text-cyan-400 font-bold text-lg">${{ "%.2f"|format(product.price) }}</p>
+      </div>
+    </a>
+    {% else %}
+    <div class="col-span-4 text-center py-16 text-slate-600">
+      <p class="font-mono text-sm">// No products in database yet — add via admin panel</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- WHY MRF CIRCUITS -->
+<section class="py-20 bg-slate-900/30 border-y border-slate-800">
+  <div class="container mx-auto px-6">
+    <div class="text-center mb-16">
+      <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-2">// Why Choose Us</p>
+      <h3 class="font-tech text-3xl font-bold text-white">ENGINEERING ADVANTAGE</h3>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div class="p-8 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <div class="w-12 h-12 border border-cyan-800 flex items-center justify-center mb-6">
+          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+        </div>
+        <h4 class="font-tech text-lg font-bold text-white mb-3">PRECISION COMPONENTS</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">Every component manufactured to ±0.01 dB tolerance. Military-grade quality for mission-critical applications.</p>
+      </div>
+      <div class="p-8 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <div class="w-12 h-12 border border-cyan-800 flex items-center justify-center mb-6">
+          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        </div>
+        <h4 class="font-tech text-lg font-bold text-white mb-3">FAST DELIVERY</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">In-stock items ship within 48 hours worldwide. Custom configurations delivered in 2–4 weeks.</p>
+      </div>
+      <div class="p-8 border border-slate-800 hover:border-cyan-800 transition-colors">
+        <div class="w-12 h-12 border border-cyan-800 flex items-center justify-center mb-6">
+          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        </div>
+        <h4 class="font-tech text-lg font-bold text-white mb-3">RF SUPPORT</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">Dedicated RF engineering support. Technical datasheets, simulation models, and custom design assistance available.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- LABORATORY LOG / NEWS -->
+<section class="py-24 container mx-auto px-6">
+  <div class="flex items-end justify-between mb-12">
+    <div>
+      <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-2">// Updates</p>
+      <h3 class="font-tech text-3xl font-bold text-white">LABORATORY LOG</h3>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    {% for article in news %}
+    <div class="border border-slate-800 hover:border-slate-700 transition-colors">
+      <div class="p-6">
+        <p class="font-mono text-xs text-cyan-400 mb-3">{{ article.published_date.strftime('%Y-%m-%d') if article.published_date else '' }}</p>
+        <h4 class="font-tech text-base font-bold text-white mb-3 leading-snug">{{ article.title }}</h4>
+        <p class="text-slate-400 text-sm leading-relaxed">{{ article.excerpt or article.content[:150] }}...</p>
+      </div>
+    </div>
+    {% else %}
+    <div class="col-span-3 p-12 border border-slate-800 text-center">
+      <p class="font-mono text-sm text-slate-600">// No laboratory logs yet</p>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Live search
+  const searchInput = document.getElementById('hero-search');
+  const resultsBox = document.getElementById('search-results');
+  let debounceTimer;
+  searchInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const q = searchInput.value.trim();
+    if (q.length < 2) { resultsBox.classList.add('hidden'); return; }
+    debounceTimer = setTimeout(async () => {
+      const res = await fetch(`/products/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (data.length === 0) { resultsBox.classList.add('hidden'); return; }
+      resultsBox.innerHTML = data.map(p => `
+        <a href="/products/${p.slug}" class="flex items-center justify-between px-4 py-3 hover:bg-slate-800 transition-colors border-b border-slate-800">
+          <div>
+            <div class="text-sm font-bold text-white">${p.name}</div>
+            <div class="text-xs font-mono text-slate-500">${p.sku}</div>
+          </div>
+          <div class="text-cyan-400 font-bold text-sm">$${p.price.toFixed(2)}</div>
+        </a>
+      `).join('');
+      resultsBox.classList.remove('hidden');
+    }, 300);
+  });
+  document.addEventListener('click', (e) => {
+    if (!searchInput.contains(e.target)) resultsBox.classList.add('hidden');
+  });
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.location = `/products?q=${encodeURIComponent(searchInput.value)}`;
+  });
+</script>
+{% endblock %}

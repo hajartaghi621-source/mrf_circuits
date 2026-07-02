@@ -1,0 +1,176 @@
+{% extends "admin/base_admin.html" %}
+
+{% block title %}Manage Orders{% endblock %}
+{% block page_title %}Orders Management{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-8">
+  <!-- Filter & Stats -->
+  <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-6 border border-slate-800">
+    <div class="flex items-center space-x-4">
+      <span class="text-sm font-mono text-slate-400">// Filter Status:</span>
+      <div class="flex space-x-2">
+        <a href="/admin/orders" class="px-3 py-1.5 text-xs font-mono border {% if not status_filter %}bg-cyan-500 text-black border-cyan-500{% else %}border-slate-700 text-slate-400 hover:border-cyan-400 hover:text-white{% endif %} transition-colors">
+          ALL
+        </a>
+        {% for st in ['paid', 'placed', 'packed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'] %}
+        <a href="/admin/orders?status={{ st }}" class="px-3 py-1.5 text-xs font-mono border {% if status_filter == st %}bg-cyan-500 text-black border-cyan-500{% else %}border-slate-700 text-slate-400 hover:border-cyan-400 hover:text-white{% endif %} transition-colors">
+          {{ st | upper }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="text-xs font-mono text-slate-500">
+      Total: <span class="text-white">{{ total }}</span> orders found
+    </div>
+  </div>
+
+  <!-- Orders Table -->
+  <div class="bg-slate-900 border border-slate-800 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-slate-800 bg-slate-950 text-slate-400 text-xs font-mono tracking-wider uppercase">
+            <th class="py-4 px-6">Order Ref</th>
+            <th class="py-4 px-6">Customer</th>
+            <th class="py-4 px-6">Date</th>
+            <th class="py-4 px-6 text-right">Amount</th>
+            <th class="py-4 px-6">Status</th>
+            <th class="py-4 px-6 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800 text-sm">
+          {% for order in orders %}
+          <tr class="hover:bg-slate-800/30 transition-colors">
+            <td class="py-4 px-6 font-mono font-bold text-cyan-400">
+              {{ order.order_ref }}
+            </td>
+            <td class="py-4 px-6">
+              <div class="font-medium text-white">{{ order.user_name }}</div>
+              <div class="text-xs text-slate-500 font-mono">{{ order.user_email }}</div>
+            </td>
+            <td class="py-4 px-6 font-mono text-slate-400 text-xs">
+              {{ order.order_date.strftime('%Y-%m-%d %H:%M') if order.order_date else '' }}
+            </td>
+            <td class="py-4 px-6 text-right font-mono text-white font-semibold">
+              ${{ "%.2f"|format(order.total_amount) }}
+            </td>
+            <td class="py-4 px-6">
+              <select onchange="updateStatus('{{ order.id }}', this.value)" 
+                class="bg-slate-950 border border-slate-700 text-xs font-mono text-slate-300 focus:border-cyan-400 outline-none px-2 py-1 transition-colors">
+                <option value="placed" {% if order.status == 'placed' %}selected{% endif %}>PLACED</option>
+                <option value="paid" {% if order.status == 'paid' %}selected{% endif %}>PAID</option>
+                <option value="packed" {% if order.status == 'packed' %}selected{% endif %}>PACKED</option>
+                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>SHIPPED</option>
+                <option value="out_for_delivery" {% if order.status == 'out_for_delivery' %}selected{% endif %}>OUT FOR DELIVERY</option>
+                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>DELIVERED</option>
+                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>CANCELLED</option>
+              </select>
+            </td>
+            <td class="py-4 px-6 text-right font-mono text-xs">
+              <button onclick="toggleDetails('order-details-{{ order.id }}')" class="text-cyan-400 hover:text-white transition-colors">
+                DETAILS [+/-]
+              </button>
+            </td>
+          </tr>
+          <!-- Hidden Details Row -->
+          <tr id="order-details-{{ order.id }}" class="hidden bg-slate-950/50">
+            <td colspan="6" class="p-6">
+              <div class="text-xs font-mono text-slate-400 space-y-2">
+                <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-3">
+                  <div>
+                    <span class="text-slate-600 block">ORDER DATE</span>
+                    <span class="text-slate-300">{{ order.order_date.strftime('%Y-%m-%d %H:%M:%S') if order.order_date else 'N/A' }}</span>
+                  </div>
+                  <div>
+                    <span class="text-slate-600 block">CUSTOMER</span>
+                    <span class="text-slate-300">{{ order.user_email }}</span>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="py-8 px-6 text-center text-slate-500 font-mono">
+              // No orders found.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="bg-slate-950 px-6 py-4 border-t border-slate-800 flex items-center justify-between">
+      <div class="text-xs font-mono text-slate-500">
+        Page <span class="text-white">{{ page }}</span> of {{ total_pages }}
+      </div>
+      <div class="flex space-x-2 font-mono text-xs">
+        {% if page > 1 %}
+        <a href="/admin/orders?status={{ status_filter }}&page={{ page - 1 }}" class="px-3 py-1.5 border border-slate-700 text-slate-400 hover:border-cyan-400 hover:text-white transition-colors">
+          PREV
+        </a>
+        {% endif %}
+        {% if page < total_pages %}
+        <a href="/admin/orders?status={{ status_filter }}&page={{ page + 1 }}" class="px-3 py-1.5 border border-slate-700 text-slate-400 hover:border-cyan-400 hover:text-white transition-colors">
+          NEXT
+        </a>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function toggleDetails(rowId) {
+  const row = document.getElementById(rowId);
+  row.classList.toggle('hidden');
+}
+
+async function updateStatus(orderId, status) {
+  try {
+    const formData = new FormData();
+    formData.append('status', status);
+    
+    const response = await fetch(`/admin/orders/${orderId}/status`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      // Flash dynamic success message/border or reload
+      showToast('Order status updated successfully.', 'success');
+    } else {
+      showToast(data.error || 'Failed to update status', 'error');
+    }
+  } catch (err) {
+    showToast('Network error occurred.', 'error');
+  }
+}
+
+function showToast(message, type) {
+  // Simple toast notifier helper
+  const toast = document.createElement('div');
+  toast.className = `fixed bottom-5 right-5 z-50 p-4 font-mono text-xs border ${
+    type === 'success' ? 'bg-green-950/90 border-green-700 text-green-300' : 'bg-red-950/90 border-red-700 text-red-300'
+  } shadow-xl max-w-sm transition-all duration-300 transform translate-y-10 opacity-0`;
+  toast.innerText = message;
+  document.body.appendChild(toast);
+  
+  // Trigger animation
+  setTimeout(() => {
+    toast.classList.remove('translate-y-10', 'opacity-0');
+  }, 100);
+  
+  // Hide & remove after 3s
+  setTimeout(() => {
+    toast.classList.add('translate-y-10', 'opacity-0');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+</script>
+{% endblock %}

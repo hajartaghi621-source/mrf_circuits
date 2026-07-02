@@ -1,0 +1,48 @@
+{% extends "dashboard/base_dashboard.html" %}
+{% block title %}Shipping Addresses{% endblock %}
+{% block dash_content %}
+<div class="mb-8">
+  <p class="text-cyan-400 font-mono text-xs tracking-widest uppercase mb-2">// Dashboard</p>
+  <h2 class="font-tech text-2xl font-bold text-white">SHIPPING ADDRESSES</h2>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+  {% for addr in addresses %}
+  <div class="bg-slate-900/60 border border-slate-800 p-6 neon-border">
+    {% if addr.is_default %}<span class="badge-stock text-xs mb-3 inline-block">DEFAULT</span>{% endif %}
+    <p class="font-tech text-sm font-bold text-white mb-3">{{ addr.full_name }}</p>
+    <p class="text-slate-400 text-sm">{{ addr.address_line1 }}</p>
+    {% if addr.address_line2 %}<p class="text-slate-400 text-sm">{{ addr.address_line2 }}</p>{% endif %}
+    <p class="text-slate-400 text-sm">{{ addr.city }}, {{ addr.state }} {{ addr.postal_code }}</p>
+    <p class="text-slate-400 text-sm">{{ addr.country }}</p>
+  </div>
+  {% endfor %}
+  <!-- Add new -->
+  <div class="dashed-card p-6 flex flex-col items-center justify-center text-center" onclick="document.getElementById('add-address-modal').classList.remove('hidden')">
+    <p class="text-cyan-400 text-2xl mb-3">+</p>
+    <p class="font-tech text-sm font-bold text-white">ADD ADDRESS</p>
+  </div>
+</div>
+<!-- Add address modal -->
+<div id="add-address-modal" class="hidden fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+  <div class="bg-slate-900 border border-slate-700 p-8 w-full max-w-lg">
+    <h3 class="font-tech text-lg font-bold text-white mb-6">ADD SHIPPING ADDRESS</h3>
+    <form method="POST" action="/dashboard/shipping/add" class="space-y-4">
+      <input name="full_name" type="text" required placeholder="Full Name" class="form-input-dark"/>
+      <input name="address_line1" type="text" required placeholder="Address Line 1" class="form-input-dark"/>
+      <input name="address_line2" type="text" placeholder="Address Line 2 (optional)" class="form-input-dark"/>
+      <div class="grid grid-cols-2 gap-4">
+        <input name="city" type="text" required placeholder="City" class="form-input-dark"/>
+        <input name="state" type="text" placeholder="State / Region" class="form-input-dark"/>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <input name="postal_code" type="text" required placeholder="Postal Code" class="form-input-dark"/>
+        <input name="country" type="text" required placeholder="Country" class="form-input-dark"/>
+      </div>
+      <div class="flex space-x-3">
+        <button type="submit" class="btn-primary flex-1">SAVE ADDRESS</button>
+        <button type="button" onclick="document.getElementById('add-address-modal').classList.add('hidden')" class="btn-secondary px-6">CANCEL</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
