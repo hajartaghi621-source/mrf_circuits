@@ -197,26 +197,36 @@ async function submitQuote() {
   const btn = document.getElementById('submit-quote-btn');
   btn.textContent = 'SUBMITTING...';
   btn.disabled = true;
-  const res = await fetch('/configurator/quote', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(config)
-  });
-  const data = await res.json();
-  if (data.success) {
-    document.getElementById('configurator-form').innerHTML = `
-      <div class="text-center py-16">
-        <div class="w-16 h-16 border border-green-500 flex items-center justify-center mx-auto mb-6">
-          <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+  try {
+    const res = await fetch('/configurator/quote', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(config)
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('configurator-form').innerHTML = `
+        <div class="text-center py-16">
+          <div class="w-16 h-16 border border-green-500 flex items-center justify-center mx-auto mb-6">
+            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          </div>
+          <h3 class="font-tech text-2xl font-bold text-white mb-4">QUOTE REQUEST #${data.quote_id} SUBMITTED</h3>
+          <p class="text-slate-400">Our RF engineers will review and respond within 24 hours.</p>
+          <a href="/" class="btn-primary mt-8 inline-flex">BACK TO HOME</a>
         </div>
-        <h3 class="font-tech text-2xl font-bold text-white mb-4">QUOTE REQUEST #${data.quote_id} SUBMITTED</h3>
-        <p class="text-slate-400">Our RF engineers will review and respond within 24 hours.</p>
-        <a href="/" class="btn-primary mt-8 inline-flex">BACK TO HOME</a>
-      </div>
-    `;
+      `;
+    } else {
+      alert('Error: ' + (data.error || 'Something went wrong. Please try again.'));
+      btn.textContent = 'SUBMIT QUOTE REQUEST';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Something went wrong. Please check your connection and try again.');
+    btn.textContent = 'SUBMIT QUOTE REQUEST';
+    btn.disabled = false;
   }
 }
-
 updateStepUI();
 </script>
 {% endblock %}
