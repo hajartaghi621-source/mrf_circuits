@@ -13,6 +13,16 @@ from app.models.user import User
 from app.models.configurator import ConfiguratorQuote
 from app.models.news import NewsArticle
 
+def parse_float(value):
+    """Convert form string to float, treating empty string as None."""
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
 router = APIRouter()
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "..", "templates"))
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "..", "static", "uploads")
@@ -143,11 +153,11 @@ async def admin_product_create(
     price: float = Form(...),
     stock_quantity: int = Form(0),
     category_id: int = Form(None),
-    frequency_min: float = Form(None),
-    frequency_max: float = Form(None),
-    power_output: float = Form(None),
-    gain: float = Form(None),
-    noise_figure: float = Form(None),
+    frequency_min: srt = Form(None),
+    frequency_max: srt = Form(None),
+    power_output: srt = Form(None),
+    gain: srt = Form(None),
+    noise_figure: srt = Form(None),
     is_active: bool = Form(True),
     image: UploadFile = File(None),
     datasheet: UploadFile = File(None),
@@ -159,6 +169,11 @@ async def admin_product_create(
         return RedirectResponse("/auth/login", status_code=302)
     db = SessionLocal()
     try:
+        frequency_min = parse_float(frequency_min)
+        frequency_max = parse_float(frequency_max)
+        power_output = parse_float(power_output)
+        gain = parse_float(gain)
+        noise_figure = parse_float(noise_figure)
         image_url = None
         if image and image.filename:
             ext = image.filename.rsplit(".", 1)[-1]
@@ -262,11 +277,11 @@ async def admin_product_update(
     price: float = Form(...),
     stock_quantity: int = Form(0),
     category_id: int = Form(None),
-    frequency_min: float = Form(None),
-    frequency_max: float = Form(None),
-    power_output: float = Form(None),
-    gain: float = Form(None),
-    noise_figure: float = Form(None),
+    frequency_min: srt = Form(None),
+    frequency_max: srt = Form(None),
+    power_output: srt = Form(None),
+    gain: srt = Form(None),
+    noise_figure: srt = Form(None),
     is_active: bool = Form(True),
     image: UploadFile = File(None),
     datasheet: UploadFile = File(None),
@@ -278,6 +293,11 @@ async def admin_product_update(
         return RedirectResponse("/auth/login", status_code=302)
     db = SessionLocal()
     try:
+        frequency_min = parse_float(frequency_min)
+        frequency_max = parse_float(frequency_max)
+        power_output = parse_float(power_output)
+        gain = parse_float(gain)
+        noise_figure = parse_float(noise_figure)
         product = db.query(Product).filter(Product.id == product_id).first()
         if product:
             product.name = name; product.sku = sku; product.slug = slug
