@@ -1,6 +1,6 @@
 # MRF Circuits — RF Engineering E-Commerce Platform
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Install Dependencies
 ```bash
@@ -28,7 +28,7 @@ Visit: http://localhost:8000
 
 ---
 
-## 🔐 Default Credentials
+##  Default Credentials
 
 | Role  | Email                  | Password        |
 |-------|------------------------|-----------------|
@@ -37,7 +37,7 @@ Visit: http://localhost:8000
 
 ---
 
-## 📦 Project Structure
+##  Project Structure
 
 ```
 mrf_circuits/
@@ -87,7 +87,7 @@ mrf_circuits/
 
 ---
 
-## 🌐 Pages
+##  Pages
 
 | URL                      | Description                        |
 |--------------------------|------------------------------------|
@@ -114,37 +114,3 @@ mrf_circuits/
 
 ---
 
-## 🗄️ Database (Railway PostgreSQL)
-
-1. Create a Railway project at https://railway.app
-2. Add a PostgreSQL service
-3. Copy the connection string to `.env` as `DATABASE_URL`
-4. Run `python seed.py` to initialize tables and data
-
----
-
-## 💳 Stripe Integration
-
-1. Create a Stripe account at https://stripe.com
-2. Get your API keys from the Stripe dashboard
-3. Add to `.env`:
-   ```
-   STRIPE_SECRET_KEY=sk_test_...
-   STRIPE_PUBLISHABLE_KEY=pk_test_...
-   ```
-
----
-
-## 🚂 Deploy to Railway
-
-```bash
-# Install Railway CLI
-npm install -g @railway/cli
-
-# Login and deploy
-railway login
-railway init
-railway up
-```
-
-Set environment variables in the Railway dashboard matching your `.env` file.
